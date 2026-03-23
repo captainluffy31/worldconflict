@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import Navbar from '../../components/layout/Navbar';
-import Footer from '../../components/layout/Footer';
+import Navbar from '../../../components/layout/Navbar';
+import Footer from '../../../components/layout/Footer';
 
 function IntensityBar({ score }) {
   const colors = ['#10B981','#10B981','#10B981','#F59E0B','#F59E0B','#F59E0B','#F97316','#F97316','#EF4444','#EF4444'];
