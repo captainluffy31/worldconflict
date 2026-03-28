@@ -10,55 +10,75 @@ async function generateBlogPost(conflict, newsItems, telegramItems) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   const newsSummary = newsItems
-    .slice(0, 6)
-    .map(n => `- [${n.source}] ${n.title}: ${n.description?.substring(0, 150)}`)
+    .slice(0, 8)
+    .map(n => `- [${n.source}] ${n.title}: ${n.description?.substring(0, 300)}`)
     .join('\n');
 
   const telegramSummary = telegramItems
-    .slice(0, 5)
-    .map(t => `- [@${t.channel}] ${t.text?.substring(0, 200)}`)
+    .slice(0, 6)
+    .map(t => `- [@${t.channel}] ${t.text?.substring(0, 300)}`)
     .join('\n');
 
   const videoItems = telegramItems.filter(t => t.hasVideo).slice(0, 3);
 
-  const prompt = `You are a professional conflict journalist writing for a global news tracker website.
+  const prompt = `You are a senior war correspondent and conflict analyst writing for WorldConflict.online — a premium global conflict tracking publication read by diplomats, journalists, and policy makers worldwide.
 
-Write a comprehensive, factual news update about: "${conflict.name}"
+Your writing style: BBC World Service meets Foreign Affairs magazine. Authoritative, precise, deeply contextual, and gripping without being sensational.
+
+CONFLICT: "${conflict.name}"
 Region: ${conflict.region}
 Conflict started: ${conflict.started}
-Background: ${conflict.summary}
+Background context: ${conflict.summary}
 
-LATEST NEWS (last 4 hours):
-${newsSummary || 'No new RSS articles found.'}
+LATEST NEWS SOURCES (last 4-6 hours):
+${newsSummary || 'No new RSS articles found — write based on most recent known situation.'}
 
-TELEGRAM INTELLIGENCE:
-${telegramSummary || 'No new Telegram updates found.'}
+TELEGRAM INTELLIGENCE REPORTS:
+${telegramSummary || 'No new Telegram updates — write based on most recent known situation.'}
 
-Write a JSON response ONLY (no markdown, no explanation):
+Write an in-depth, comprehensive conflict report as a JSON object ONLY (no markdown, no explanation, no extra text).
+
+Requirements for each field:
+- "headline": Punchy, specific, present-tense headline under 12 words. Must reference actual development, not generic.
+- "subheadline": One sharp sentence that adds crucial detail the headline omits.
+- "summary": 3-4 sentences. Cover WHO did WHAT, WHERE, WHY it matters, and immediate consequences. This is the hook — make it gripping.
+- "body.latest_developments": MINIMUM 4-5 detailed paragraphs. Cover: specific military/political actions with locations and names, casualty figures if available, territorial changes, key statements from officials, chronological breakdown of events in the last 6 hours. Use specific details — not vague generalities.
+- "body.background": 2-3 solid paragraphs giving essential historical and geopolitical context. Explain root causes, key factions involved, how the conflict evolved to this point. Essential for readers new to this conflict.
+- "body.international_reaction": 2 paragraphs. Name specific countries, organizations (UN, NATO, EU, AU etc), and their exact positions or statements. Include any sanctions, diplomatic moves, or military aid decisions.
+- "body.what_to_watch": 2 paragraphs. Identify 3-4 specific upcoming flashpoints, diplomatic meetings, deadlines, or military objectives that will shape this conflict in the next 24-72 hours. Be specific and analytical.
+- "intensity": Integer 1-10 based on active casualties, territorial changes, and escalation risk.
+- "intensityReason": 2 sentences explaining the intensity score with specific evidence.
+- "tags": 6-8 highly searchable keywords including country names, faction names, key locations.
+- "metaDescription": SEO description under 160 chars, include conflict name and key development.
+- "keyFacts": Array of 5-7 specific, verifiable facts with numbers/dates where possible (casualties, distances, dates, troop numbers etc).
+- "conflictStatus": One of: "escalating"|"stable"|"de-escalating"|"ceasefire"|"critical"
+
+JSON format:
 {
-  "headline": "Compelling news headline under 12 words, present tense",
-  "subheadline": "One sentence elaborating the main development",
-  "summary": "2-3 sentence executive summary for quick reading",
+  "headline": "...",
+  "subheadline": "...",
+  "summary": "...",
   "body": {
-    "latest_developments": "2-3 paragraphs about what happened in last 4-6 hours",
-    "background": "1-2 paragraphs of context for new readers",
-    "international_reaction": "1 paragraph about how world powers are responding",
-    "what_to_watch": "1 paragraph about what to expect next"
+    "latest_developments": "...",
+    "background": "...",
+    "international_reaction": "...",
+    "what_to_watch": "..."
   },
   "intensity": 8,
-  "intensityReason": "Brief reason for intensity score (1-10)",
-  "tags": ["tag1", "tag2", "tag3", "tag4"],
-  "metaDescription": "SEO meta description under 160 chars",
-  "keyFacts": ["fact1", "fact2", "fact3"],
-  "conflictStatus": "escalating|stable|de-escalating|ceasefire|critical"
+  "intensityReason": "...",
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],
+  "metaDescription": "...",
+  "keyFacts": ["fact1", "fact2", "fact3", "fact4", "fact5"],
+  "conflictStatus": "escalating"
 }
 
-Rules:
-- Be factual, not sensational
-- If no new developments, summarize recent known situation
-- Intensity 1-3=low, 4-6=medium, 7-8=high, 9-10=critical
-- Tags should be searchable keywords
-- JSON only, no other text`;
+STRICT RULES:
+- Output JSON only — zero other text
+- Every body section must be DETAILED and SUBSTANTIVE — minimum 150 words each
+- Use specific names, locations, dates, and figures wherever possible
+- If no new data available, write the most detailed, accurate summary of the current known situation
+- Never write vague filler like "the situation continues" — always be specific
+- Write at a level that would satisfy a foreign policy professional`;
 
   try {
     const result = await model.generateContent(prompt);
@@ -72,7 +92,7 @@ Rules:
     return {
       headline: `${conflict.name}: Latest Updates`,
       subheadline: `Ongoing situation in ${conflict.region}`,
-      summary: `The conflict in ${conflict.region} continues. Monitor for latest developments.`,
+      summary: `The conflict in ${conflict.region} continues with significant developments. International observers are monitoring the situation closely as key stakeholders weigh their options. The humanitarian situation remains a concern for aid organizations operating in the region.`,
       body: {
         latest_developments: newsItems[0]?.description || 'Monitoring ongoing situation.',
         background: conflict.summary,
@@ -80,8 +100,8 @@ Rules:
         what_to_watch: 'Watch for further developments in the coming hours.',
       },
       intensity: 5,
-      intensityReason: 'Ongoing conflict',
-      tags: conflict.keywords.slice(0, 4),
+      intensityReason: 'Ongoing conflict with no major escalation reported in recent hours.',
+      tags: conflict.keywords.slice(0, 6),
       metaDescription: `Latest updates on ${conflict.name}. Real-time conflict tracking on WorldConflict.online`,
       keyFacts: [],
       conflictStatus: 'active',
