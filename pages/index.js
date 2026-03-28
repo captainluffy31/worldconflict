@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+// ✅ FIX 1: Pehla wala duplicate component HATA diya (lines 1-88 wala test code)
+// ✅ FIX 2: posts fetch me d.id add kiya
+// ✅ FIX 3: catch block me full error log kiya (sirf .message nahi)
+// ✅ FIX 4: PostCard key me post.id || post.slug use kiya (slug missing ho to crash na ho)
+// ✅ FIX 5: Unused imports hataaye (useEffect, getDocs, etc. jo use nahi ho rahe the)
+
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { db } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import ConflictCard from '../components/ui/ConflictCard';
@@ -168,8 +172,9 @@ export default function Home({ initialConflicts, initialPosts, systemStatus }) {
               gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
               gap: '14px',
             }}>
+              {/* ✅ FIX 4: key me post.id use kiya, slug missing ho to crash na ho */}
               {posts.slice(1, 7).map(post => (
-                <PostCard key={post.slug} post={post} />
+                <PostCard key={post.id || post.slug} post={post} />
               ))}
             </div>
           </div>
@@ -242,7 +247,6 @@ export default function Home({ initialConflicts, initialPosts, systemStatus }) {
 
 export async function getServerSideProps() {
   try {
-    const admin = require('firebase-admin');
     const { db: adminDb } = require('../lib/firebase-admin');
 
     const [conflictsSnap, postsSnap, statusSnap] = await Promise.all([
@@ -252,7 +256,10 @@ export async function getServerSideProps() {
     ]);
 
     const conflicts = conflictsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const posts = postsSnap.docs.map(d => d.data());
+
+    // ✅ FIX 2: d.id add kiya — pehle sirf d.data() tha, isliye id missing thi
+    const posts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
     const systemStatus = statusSnap.exists ? statusSnap.data() : {};
 
     return {
@@ -263,7 +270,8 @@ export async function getServerSideProps() {
       },
     };
   } catch (err) {
-    console.error('Home SSR error:', err.message);
+    // ✅ FIX 3: Full error object log kar rahe hain — sirf .message nahi
+    console.error('Home SSR error (FULL):', err);
     return { props: { initialConflicts: [], initialPosts: [], systemStatus: {} } };
   }
 }

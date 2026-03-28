@@ -1,10 +1,17 @@
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function PostCard({ post, size = 'normal' }) {
-  const timeAgo = post.publishedAt
-    ? formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true })
-    : 'Recently';
+  // ✅ FIX: Server aur client ka time alag hota hai — isliye pehle static date dikhao
+  // phir client side pe timeAgo set karo
+  const [timeAgo, setTimeAgo] = useState('Recently');
+
+  useEffect(() => {
+    if (post.publishedAt) {
+      setTimeAgo(formatDistanceToNow(new Date(post.publishedAt), { addSuffix: true }));
+    }
+  }, [post.publishedAt]);
 
   const isLarge = size === 'large';
 
