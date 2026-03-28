@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import Navbar from '../../../components/layout/Navbar';
 import Footer from '../../../components/layout/Footer';
+// ✅ FIX 2: PostCard import add kiya
+import PostCard from '../../../components/ui/PostCard';
 
 function IntensityBar({ score }) {
   const colors = ['#10B981','#10B981','#10B981','#F59E0B','#F59E0B','#F59E0B','#F97316','#F97316','#EF4444','#EF4444'];
@@ -70,8 +72,6 @@ function TelegramEmbed({ video }) {
           {video.description}
         </p>
       )}
-
-      {/* Telegram widget embed */}
       <script async src="https://telegram.org/js/telegram-widget.js?22"
         data-telegram-post={video.telegramLink?.replace('https://t.me/', '')}
         data-width="100%"
@@ -364,7 +364,7 @@ export default function PostPage({ post, relatedPosts }) {
                 gap: '14px',
               }}>
                 {relatedPosts.map(p => (
-                  <PostCard key={p.slug} post={p} />
+                  <PostCard key={p.id || p.slug} post={p} />
                 ))}
               </div>
             </div>
@@ -382,8 +382,9 @@ export async function getServerSideProps({ params }) {
     const { db: adminDb } = require('../../../lib/firebase-admin');
     const { conflictId, slug } = params;
 
+    // ✅ FIX 3: Doc ID se nahi, slug field se query kar rahe hain
     const [postSnap, relatedSnap] = await Promise.all([
-      adminDb.collection('posts').doc(slug).get(),
+      adminDb.collection('posts').where('slug', '==', slug).limit(1).get(),
       adminDb.collection('posts')
         .where('conflictId', '==', conflictId)
         .where('isPublished', '==', true)
@@ -392,11 +393,13 @@ export async function getServerSideProps({ params }) {
         .get(),
     ]);
 
-    if (!postSnap.exists) return { notFound: true };
+    if (postSnap.empty) return { notFound: true };
 
-    const post = postSnap.data();
+    const postDoc = postSnap.docs[0];
+    const post = { id: postDoc.id, ...postDoc.data() };
+
     const relatedPosts = relatedSnap.docs
-      .map(d => d.data())
+      .map(d => ({ id: d.id, ...d.data() }))
       .filter(p => p.slug !== slug);
 
     return {
@@ -406,7 +409,7 @@ export async function getServerSideProps({ params }) {
       },
     };
   } catch (err) {
-    console.error('Post page error:', err.message);
+    console.error('Post page error FULL:', err);
     return { notFound: true };
   }
 }
