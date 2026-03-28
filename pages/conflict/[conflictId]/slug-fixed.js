@@ -379,7 +379,7 @@ export default function PostPage({ post, relatedPosts }) {
 
 export async function getServerSideProps({ params }) {
   try {
-    const { db: adminDb } = require('../../lib/firebase-admin');
+    const { db: adminDb } = require('../../../lib/firebase-admin');
     const { conflictId, slug } = params;
 
     const [postSnap, relatedSnap] = await Promise.all([
