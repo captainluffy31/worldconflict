@@ -78,7 +78,19 @@ STRICT RULES:
 - Use specific names, locations, dates, and figures wherever possible
 - If no new data available, write the most detailed, accurate summary of the current known situation
 - Never write vague filler like "the situation continues" — always be specific
-- Write at a level that would satisfy a foreign policy professional`;
+- Write at a level that would satisfy a foreign policy professional
+
+${conflict.id === 'usa-global-standing' ? `
+SPECIAL TONE INSTRUCTIONS FOR THIS CONFLICT:
+This is a satirical-but-factual analysis of US foreign policy chaos. Use dry wit and sharp sarcasm in headlines and summaries — think The Economist meets The Daily Show.
+- Headline must be sarcastic/ironic — e.g. "America First: Everyone Else Also Leaving", "Trump Discovers Allies Were Actually Useful", "US Tariffs Hit Everyone Including Countries That Don't Exist Yet"
+- Subheadline should twist the knife with a factual-but-absurd follow-up
+- Summary should be gripping and slightly sardonic — factual but with raised eyebrow energy
+- Body sections should be factual and detailed but written with dry wit
+- keyFacts should include genuinely absurd-but-true facts with dollar amounts and dates
+- Do NOT be partisan — be equally sarcastic about all sides, focus on the geopolitical absurdity
+` : ''}`;
+
 
   try {
     const result = await model.generateContent(prompt);
