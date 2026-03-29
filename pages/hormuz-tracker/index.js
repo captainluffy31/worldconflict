@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Navbar from '../../components/layout/Navbar';
-import Footer from '../../components/layout/Footer';
+import Navbar from '../components/layout/Navbar';
+import Footer from '../components/layout/Footer';
 
 // Threat level config
 function getThreatConfig(level) {
@@ -390,7 +390,7 @@ export default function HormuzTracker({ latestPost }) {
 
 export async function getServerSideProps() {
   try {
-    const { db: adminDb } = require('../../lib/firebase-admin');
+    const { db: adminDb } = require('../lib/firebase-admin');
 
     // Get latest post related to Hormuz or Iran
     const snap = await adminDb.collection('posts')
